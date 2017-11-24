@@ -1,0 +1,27 @@
+{  
+	"_": "=== OPSI package variables ===",
+	"O_PKG_VER"         : "1",
+	"O_SOFTWARE_VER"    : "2017.2",
+	"O_RELEASE_DATE"    : "{{M_TODAY}}",
+	
+	"STAGE"             : "{{M_STAGE}}",
+	"TESTPREFIX"	    : "{{M_TESTPREFIX}}",
+	"ORGPREFIX"         : "{{M_ORGPREFIX}}",
+	"ORGNAME"           : "{{M_ORGNAME}}",
+
+	"_":"=== conditions ===",	
+	"ifdef_testing"                 :{{M_TESTING}},	
+	"ifdef_internal"                :{{M_INTERNAL}},	
+	
+	"ifdef_auto_download"           :false,
+	
+	"ifdef_property_language"       :false,
+	"ifdef_property_architecture"   :false,
+	"ifdef_property_kill_running"   :true,
+	
+	"_":"=== some tuning ===",
+	"DEFAULT_TESTING_LOGLEVEL" : "7",
+	"DEFAULT_RELEASE_LOGLEVEL" : "5",
+	
+	"_":""
+}

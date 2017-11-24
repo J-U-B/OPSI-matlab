@@ -1,0 +1,196 @@
+;=====================================================================
+; delsub.opsiinc MATLAB
+;
+; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-24 07:48:04 +0100
+;=====================================================================
+
+
+;=======================================
+[sub_delsub_main]
+;=======================================
+Message "Removing previous version(s) of " + $ProductName$
+ShowBitmap $Img_Prepare$ $ProductName$
+marktime
+
+if FileExists("%ScriptPath%\checkinstance.opsiinc")
+	include_append "%ScriptPath%\checkinstance.opsiinc"
+endif	
+
+Set $RegKeyPath$ = "[HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\" + $Uninst_ID$ + "]"
+
+Set $UninstallString$ = GetRegistryStringValueSysnative($RegKeyPath$ + " UninstallString")
+Set $Inst_Name$       = GetRegistryStringValueSysnative($RegKeyPath$ + " DisplayName")
+Set $Inst_Ver$        = GetRegistryStringValueSysnative($RegKeyPath$ + " DisplayVersion")
+Set $Inst_Loc$        = GetRegistryStringValueSysnative($RegKeyPath$ + " InstallLocation")
+
+if ($UninstallString$="") OR ($Inst_Loc$="") OR ($Inst_Name$="")
+	logWarnig "Uninstall information in registry missing or incomplete! Trying fallback to package values."
+	if ($UninstallString$ = "")
+		Set $UninstallString$ = $Uninstaller$
+	endif
+	if ($Inst_Loc$ = "")
+		Set $Inst_Loc$ = $InstallDir$
+	endif
+	if ($Inst_Name$ = "")
+		Set $Inst_Name$ = $ProductName$ + " " + $Inst_Sub$
+	endif
+endif
+
+;=== get uninstaller from $UninstallString$
+Set $aString$ = splitstring($UninstallString$, '"')
+if (count($aString$) INT> "1")
+	Set $UninstallerReg$ = takestring(1, $aString$)
+else
+	Set $UninstallerReg$ = ""
+endif
+if ($UninstallerReg$ ="") OR not (fileExists($UninstallerReg$))
+	Set $UninstallerReg$ = takestring(0, splitString($UninstallString$, ' '))
+endif
+
+if FileExists($UninstallerReg$)
+	comment "Start uninstall sub section for " + $Inst_Name$
+	
+
+	
+	;=== uninstall (if uninstaller exists)
+	if not ($UninstallerReg$ = "") and fileExists($UninstallerReg$)
+		Sub_Uninstall
+	else
+		logError "Uninstaller does not exist!"
+	endif
+	
+	;=== custom post uninstall
+	comment "include custom post uninstall file"
+	if not ($CustomPostUninstall$ = "none")
+		if FileExists("%ScriptPath%\custom\" + $CustomPostUninstall$)
+			ShowBitmap $Img_Uninstall_Custom$ $ProductName$
+			include_insert "%ScriptPath%\custom\" + $CustomPostUninstall$
+			ShowBitmap $Img_Uninstall$ $ProductName$
+		endif
+	endif
+
+	;=== measure time
+	set $TimeDiff$ = getDiffTimeSec
+	Message  "Removal time: " + $TimeDiff$ + " seconds"
+	
+else
+	comment "No uninstaller found at [" + $UninstallString$ + "]"
+	
+	;=== trying cleanup anyway
+	if (FileExists($Inst_Loc$))
+		sub_check_pathVar
+		logWarning "Orphaned install directory still exists: [" + $Uninst_RegDir$ + "]"
+		if ($pr_PurgeDirectory$ = "True")
+			;=== try final cleanup
+			Files_del_InstallDir
+		endif
+	endif	
+endif
+
+
+
+
+;======================================================================
+[Sub_Uninstall]
+;======================================================================
+ShowBitmap $Img_Uninstall$ $ProductName$
+; Message "Uninstalling previous setup of " + $ProductName$ + " " + $Inst_Ver$
+Message "Uninstalling previous setup of " + $Inst_Name$
+
+;=== get uninstall directory
+sub_check_PathVar
+
+;=== compare current InstallLocation with InstallDir from this package:
+if not ($Uninst_RegDir$ = lower($InstallDir$))
+	logWarning "Current installation is not at the expected location:"
+	comment "   Current InstallLocation: [" + $Uninst_RegDir$ + "]"
+	comment "   Expected Location:       [" + $InstallDir$ + "]"
+endif
+
+;=== compare current Uninstaller with InstallDir from this package:
+if not (lower($Uninstaller$) = lower(stringReplace($UninstallerReg$,'"','')))
+	logWarning "Expected $UninstallerReg$ from registry does not match $Uninstaller$ from package:"
+	comment "   [" + $UninstallerReg$ + "] <> [" + $Uninstaller$ + "]"
+endif
+
+;=== check for running binaries
+sub_checkinstance
+
+
+
+;=== create uninstall config
+comment "Creating configuration file for uninstall"
+if (FileExists($UninstallCfg$))
+	Files_remove_uninstall_cfg
+endif
+	
+PatchTextFile_uninstall_cfg $UninstallCfg$
+
+if not (FileExists($UninstallCfg$))
+	logError "Uninstall config not found: [" + $UninstallCfg$ + "]"
+	isFatalError
+endif	
+
+;=== UNINSTALL
+Winbatch_Uninstall /TimeOutSeconds 1000
+sub_check_exitcode
+
+;=== check install directory
+if ($ExitCode$ = "0") and not ($Uninst_RegDir$ = "")
+	;=== does the installation directory still exist?
+		if (FileExists($Uninst_RegDir$))
+			logWarning "Install directory still exists: [" + $Uninst_RegDir$ + "]"
+			if ($pr_PurgeDirectory$ = "True")
+				;=== try final cleanup
+				Files_del_InstallDir
+			endif
+		endif
+endif	
+
+;=== cleanup
+if ($Testing$ = "false") and (FileExists($UninstallCfg$))
+	Files_remove_uninstall_ini
+endif
+
+
+;======================================================================
+[Winbatch_Uninstall]
+;======================================================================
+"$UninstallerReg$" $Uninst_Opts$
+; $UninstallString$  $Uninst_Opts$
+
+
+;======================================================================
+[Files_del_InstallDir]
+;======================================================================
+delete -sf "$Uninst_RegDir$"
+
+
+;=====================================================================
+[Files_remove_uninstall_cfg]
+;=====================================================================
+del -f "$UninstallCfg$"  
+
+
+;======================================================================
+[sub_check_pathVar]
+;======================================================================
+if ($Inst_Loc$ = "")
+	set $Uninst_RegDir$ = ""
+else 
+	set $Uninst_RegDir$ = stringReplace(lower($Inst_Loc$) + "\", "\\", "\")
+	set $Uninst_RegDir$ = stringReplace($Uninst_RegDir$, '"','')
+endif
+
+
+;======================================================================
+[PatchTextFile_uninstall_cfg]
+;======================================================================
+AddLine "###########################################"
+AddLine "# Uninstall settings:"
+AddLine "###########################################"
+;*** setting generic parameters
+SetValueByKey "mode" 					"$pr_SetupMode$"
+SetValueByKey "automatedModeTimeout"	"$pr_AutomatedModeTimeout$"
+SetValueByKey "outputFile" 				"$UninstallLog$"
+SetValueByKey "prefs"					"$pr_RemovePrefs$"

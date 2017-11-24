@@ -1,0 +1,38 @@
+;=====================================================================
+; exitcode_generic.opsiinc
+;
+; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-17 15:07:19 +0100
+;=====================================================================
+
+
+;=====================================================================
+[sub_check_exitcode]
+;=====================================================================
+; DefVar $currentLogLevel$
+
+set $currentLogLevel$ = getLogLevel
+
+;*** ExitCode des Installers abfragen
+set $ExitCode$ = getLastExitCode
+ 
+;*** Loglevel anpassen
+setLogLevel = 4
+ 
+ 
+;*** ExitCode auswerten
+Switch $ExitCode$
+	Case "0"
+		setLogLevel = 5
+		comment "ExitCode = " + $ExitCode$ + " Normal execution (no error)"
+		setLogLevel = $currentLogLevel$
+	EndCase
+	 
+	DefaultCase
+		setLogLevel = 5
+		logError "ExitCode = " + $ExitCode$ + " Unknown error"
+		isFatalError	
+	EndCase
+EndSwitch
+ 
+;***Loglevel anpassen
+setLogLevel = $currentLogLevel$

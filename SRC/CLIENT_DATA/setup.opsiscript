@@ -1,0 +1,204 @@
+;======================================================================
+; setup.ins MATLAB
+; Installer-Typ: ???
+; 
+; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-23 15:22:35 +0100
+;======================================================================
+
+;======================================================================
+[Initial]
+;======================================================================
+setLogLevel=5
+; Log Errors in Logfile but don't abort:
+ExitOnError=true
+; Show syntax errors in the script:
+ScriptErrorMessages=off
+; Dont trace step by step through the script: 
+TraceMode=off 
+; Let started programs run in front of the winst window
+StayOnTop=false 
+
+;======================================================================
+[Actions]
+;======================================================================
+include_insert "%ScriptPath%\product_variables.opsiinc"
+include_append "%ScriptPath%\exitcode_generic.opsiinc"
+
+
+;=== Check free space
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+	LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+	isFatalError
+	; Stop process and set installation status to failed
+else
+	if ($pr_PreUninst$ = "True")
+		;=== remove previous installation
+		if FileExists("%ScriptPath%\delsub.opsiinc")
+			comment  "Starting uninstall sub section"
+			; sub "%ScriptPath%\delsub.opsiinc"	
+			include_append "%ScriptPath%\delsub.opsiinc"
+			sub_delsub_main
+		else
+			logError "Can't find uninstaller script"
+			isFatalError "delsub.opsiinc not found"
+		endif
+	else
+		;=== only kill running instance (if allowed)
+		if FileExists("%ScriptPath%\checkinstance.opsiinc")
+			include_append "%ScriptPath%\checkinstance.opsiinc"
+			sub_checkinstance
+		endif
+	endif
+	
+	; Start the installation
+	ShowBitmap $Img_Install$ $ProductName$
+	Message "Installing " + $ProductName$ + " " + $Version$+ " (" + $sw_arch$ + " bit)"
+	
+	marktime	
+	
+	;=== create install config
+	comment "Creating configuration file for setup"
+	if (FileExists($InstallCfg$))
+		Files_remove_install_cfg
+	endif
+	
+	PatchTextFile_install_cfg $InstallCfg$
+	Sub_GetProductMap
+	
+	
+	if not (FileExists($InstallCfg$))
+		logError "Install config not found: [" + $InstallCfg$ + "]"
+		isFatalError
+	endif	
+
+
+	if not (FileExists($Installer$))
+		logError "Installer not found: [" + $Installer$ + "]"
+		isFatalError
+	endif
+	
+	
+	comment "Start setup program"
+	Message "Installing - please be patient..."
+	Winbatch_install
+	Sub_check_exitcode
+	
+	if not (FileExists($InstallDir$))
+		logError "Installation failed; target directory does not exist"
+		isFatalError	
+	endif
+
+	
+	;=== custom post install
+	comment "include custom post install file"
+	if not ($CustomPostInstall$ = "none")
+		if FileExists("%ScriptPath%\custom\" + $CustomPostInstall$)
+			ShowBitmap $Img_Install_Custom$ $ProductName$
+			include_insert "%ScriptPath%\custom\" + $CustomPostInstall$
+			ShowBitmap $Img_Install$ $ProductName$
+		endif
+	endif
+	
+	;=== cleanup
+	if ($Testing$ = "false") and (FileExists($InstallCfg$))
+		Files_remove_install_ini
+	endif
+
+	;=== measure installation time
+	set $TimeDiff$ = getDiffTimeSec
+	Message  "Setup time: " + $TimeDiff$ + " seconds"	
+	
+endif
+
+ 
+;======================================================================
+[Winbatch_install]
+;======================================================================
+"$Installer$" $Inst_Opts$ 
+
+;======================================================================
+[Sub_GetProductMap]
+;======================================================================
+Set $ProductMap$ = emptyList($ProductMap$)
+if ( $pr_ProdListFile$ = "" )
+	comment "No install answer file given"
+else
+	if not (FileExists("%ScriptPath%\" + $pr_ProdListFile$))
+		logWarning "Given product list file does not exist: '" + $pr_ProdListFile$ + "'"
+	else
+		Set $ProductMap$ = loadTextFile("%ScriptPath%\" + $pr_ProdListFile$)
+		Set $ProductMap$ = getListContaining($ProductMap$,"product.")
+	endif
+endif
+for %prod% in $pr_ProdList$ do Sub_AppendToProductMap
+;; write to answer file:
+for %prod% in $ProductMap$ do PatchTextFile_install_cfg_product $InstallCfg$
+
+;======================================================================
+[Sub_AppendToProductMap]
+;======================================================================
+Set $Str$ = "product.%prod%"
+for %s% in $ProductMap$ do Sub_SearchProductMap
+
+if not ( $Str$ = "" ) AND not ( "%prod%" = "" )
+	Set $ProductMap$ = addToList($ProductMap$, $Str$)
+endif
+ 
+;======================================================================
+[Sub_SearchProductMap]
+;====================================================================== 
+if ("%s%" = $Str$ ) 
+	Set $Str$ = ""
+endif
+ 
+;======================================================================
+[PatchTextFile_install_cfg]
+;======================================================================
+AddLine "###########################################"
+AddLine "# Installation settings:"
+AddLine "###########################################"
+;*** setting generic parameters
+SetValueByKey "agreeToLicense" 			"yes"
+SetValueByKey "mode" 					"$pr_SetupMode$"
+SetValueByKey "automatedModeTimeout"	"$pr_AutomatedModeTimeout$"
+;*** install settings
+SetValueByKey "destinationFolder" 		"$InstallDir$"
+SetValueByKey "fileInstallationKey"		"$pr_InstallKey$"
+SetValueByKey "licensePath" 			"$License$"
+SetValueByKey "outputFile" 				"$InstallLog$"
+;*** configuration
+SetValueByKey "setFileAssoc" 			"$pr_FileAssoc$"
+SetValueByKey "desktopShortcut" 		"$pr_DesktopLink$"
+SetValueByKey "startMenuShortcut" 		"$pr_StartMenuLink$"
+SetValueByKey "createAccelTask" 		"$pr_AccelTask$"
+SetValueByKey "enableLNU" 				"$pr_EnableLNU$"
+;SetValueByKey "" 						""
+AddLine ""
+AddLine "###########################################"
+AddLine "# Products:"
+AddLine "###########################################"
+;*** products/components
+
+;======================================================================
+[PatchTextFile_install_cfg_product]
+;======================================================================
+AddLine "%prod%"
+
+;=====================================================================
+[Files_copy_install_cfg]			
+;(obsolete)
+;=====================================================================
+copy "$InstallCfgSrc$"  "%opsiTmpDir%\"
+
+;=====================================================================
+[ShellInAnIcon_copy_install_cfg]
+;(obsolete)
+;=====================================================================
+copy "$InstallCfgSrc$"  "$InstallCfg$"
+  
+;=====================================================================
+[Files_remove_install_cfg]
+;=====================================================================
+del -f "$InstallCfg$"  
+  
+

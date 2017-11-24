@@ -1,0 +1,224 @@
+;=====================================================================
+; product specific variables MATLAB
+;
+; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-23 16:44:34 +0100
+;=====================================================================
+
+include_insert "%ScriptPath%\variables.opsiinc"
+
+Set $MAP$ = getProductMap
+Set $FullProductId$   	= getValue("id", $MAP$)
+Set $ProductName$     	= getValue("name", $MAP$)
+Set $Version$         	= getValue("ProductVersion", $MAP$)
+Set $ActionRequest$		= getValue("actionrequest", $MAP$)
+Set $SystemType$      	= GetSystemType
+Set $NTVersion$   		= GetMsVersionInfo
+
+;-----------------------------------------------------------
+;*** basic requirements
+;-----------------------------------------------------------
+requiredWinstVersion >= "4.11.6"
+
+if not ($NTVersion$ >= "6.1")
+	LogError "OS is not Windows 7 or above"
+	isFatalError
+endif
+
+if not ($SystemType$ = "64 Bit System")
+	LogError "OS is not a 64 Bit System"
+	isFatalError
+endif
+
+;-----------------------------------------------------------
+;*** get LogLevel from property
+Set $LogLevelDefault$ = GetProductProperty("log_level","default")
+
+;-----------------------------------------------------------
+;*** detect testing package:
+;-----------------------------------------------------------
+if strPos($FullProductId$, "0_") = "0"
+	; no a testing package
+	set $ProductId$  	= $FullProductId$ 
+	set $Testing$ 		= "false"
+	if ($LogLevelDefault$ = "default")
+		set $LogLevelDefault$  	= "{{DEFAULT_RELEASE_LOGLEVEL}}"
+	endif	
+else
+	; this is a testing package
+	comment "Prefix for testing package detected"
+	set $ProductId$  	= strPart($FullProductId$,"3",strLength($FullProductId$))
+	set $Testing$ 		= "true"
+	if ($LogLevelDefault$ = "default")
+		set $LogLevelDefault$  	= "{{DEFAULT_TESTING_LOGLEVEL}}"
+	endif		
+endif
+set $LogLvl$  = $LogLevelDefault$
+
+;-----------------------------------------------------------
+;*** detect DFN package:
+;-----------------------------------------------------------
+if strPos($FullProductId$, "dfn_") = "0"
+	set $isDFN$ = "false"
+	set $StrippedProductId$ = $ProductId$
+else
+	set $isDFN$ = "true"
+	set $StrippedProductId$ = strPart($ProductId$,"5",strLength($ProductId$))
+endif
+
+;-----------------------------------------------------------
+;*** Images
+;-----------------------------------------------------------
+if ($isDFN$ = "true")
+	set $Img_Install$		= "%ScriptPath%\images\" + $StrippedProductId$ + "_install_dfn.png"
+else
+	set $Img_Install$		= "%ScriptPath%\images\" + $StrippedProductId$ + "_install.png"
+endif
+set $Img_Install_Custom$	= "%ScriptPath%\images\" + $StrippedProductId$ + "_install_custom.png"
+Set $Img_Uninstall$			= "%ScriptPath%\images\" + $StrippedProductId$ + "_uninstall.png"
+Set $Img_Uninstall_Custom$	= "%ScriptPath%\images\" + $StrippedProductId$ + "_uninstall_custom.png"
+Set $Img_Prepare$			= "%ScriptPath%\images\" + $StrippedProductId$ + "_prepare.png"
+Set $Img_Plugins$			= "%ScriptPath%\images\" + $StrippedProductId$ + "_plugins.png"
+Set $Img_Update$			= "%ScriptPath%\images\" + $StrippedProductId$ + "_update.png"
+
+comment "preparing..."
+ShowBitmap $Img_Prepare$ $ProductName$
+
+;-----------------------------------------------------------
+;*** software architecture; valid values: "32 bit", "64 bit", "sysnative"
+;-----------------------------------------------------------
+; Set $sw_arch$ = GetProductProperty("install_architecture","sysnative")
+; Set $sw_arch$ = takeString(0, splitString($sw_arch$, " "))
+Set $sw_arch$		  = "64"
+
+if ( $sw_arch$ = "sysnative" )
+	if ($SystemType$ = "64 Bit System")
+		Set $sw_arch$ = "64"
+	else
+		Set $sw_arch$ = "32"
+	endif
+endif
+
+if ($sw_arch$ = "64")
+	; 64 bit software
+	set $InstallBase$ = "%ProgramFiles64Dir%"
+else
+	; 32 bit software
+	set $InstallBase$ = EnvVar("ProgramFiles(x86)")
+endif
+
+if ($SystemType$="x86 System") and ($sw_arch$="64")
+	LogError "Cannot install 64 bit version of " + $ProductName$ + " on a 32 bit operating system!"
+	isFatalError
+endif
+
+;-----------------------------------------------------------
+;*** property: language - "de_DE, "en_US"
+; application language defined via environment variable LANG
+;-----------------------------------------------------------
+{{#ifdef_property_language}}
+Set $sw_lang$ = GetProductProperty("default_language","en_US")
+{{/ifdef_property_language}}
+{{^ifdef_property_language}}
+Set $sw_lang$ = ""
+{{/ifdef_property_language}}
+
+;-----------------------------------------------------------
+;*** property: create desktop/startmenu/quickstart link?
+;-----------------------------------------------------------
+Set $pr_StartMenuLink$ 			= GetProductProperty("link_startmenu","True")
+Set $pr_DesktopLink$ 			= GetProductProperty("link_desktop","False")
+
+;-----------------------------------------------------------
+;*** properties:
+;-----------------------------------------------------------
+Set $pr_SetupMode$ 				= GetProductProperty("setup_mode","silent")
+Set $pr_AutomatedModeTimeout$	= GetProductProperty("automated_mode_timeout","1")
+Set $pr_PreUninst$				= GetProductProperty("uninstall_before_setup","False")
+Set $pr_InstallSrc$ 			= GetProductProperty("install_source","")
+Set $pr_InstallKey$ 			= GetProductProperty("install_key","")
+Set $pr_LicFile$ 				= GetProductProperty("license_file","")
+Set $pr_FileAssoc$ 				= GetProductProperty("file_association","True")
+Set $pr_AccelTask$ 				= GetProductProperty("create_accel_task","False")
+Set $pr_EnableLNU$ 				= GetProductProperty("enable_named_user","False")
+Set $pr_PurgeDirectory$			= GetProductProperty("purge_directory","False")
+Set $pr_RemovePrefs$			= GetProductProperty("remove_prefs","True")
+Set $pr_ProdListFile$			= GetProductProperty("product_list_file","")
+Set $pr_ProdList$				= GetProductPropertyList("product_list","")
+
+;-----------------------------------------------------------
+;*** check properties:
+;-----------------------------------------------------------
+if ( $pr_InstallKey$ = "")
+	LogError "Installation key required!"
+	isFatalError
+endif
+
+if ( $pr_LicFile$ = "")
+	Set $pr_LicFile$ = "cfg\matlab.lic"
+	logWarning "No license file given. Assuming: '" + $pr_LicFile$ + "'"
+endif
+
+if ( $pr_InstallSrc$ = "")
+	Set $pr_InstallSrc$ = "files"
+	logWarning "No installation source given. Assuming: '" + $pr_InstallSrc$ + "'"
+endif
+
+;-----------------------------------------------------------
+;*** properties: post install/uninstall
+;-----------------------------------------------------------
+set $CustomPostInstall$ 	= getProductProperty("custom_post_install","none")
+set $CustomPostUninstall$ 	= getProductProperty("custom_post_uninstall","none")
+
+;-----------------------------------------------------------
+;*** properties: components
+;-----------------------------------------------------------
+; set $pr_comp_X$		= GetProductProperty("comp_X","False")
+
+;-----------------------------------------------------------
+;*** misc settings
+;-----------------------------------------------------------
+setlogLevel 				= $LogLvl$
+set $PSDETAIL$ 				= "%ScriptPath%\bin\psdetail.exe"
+set $Kill_Running$ 			= GetProductProperty("kill_running", "False")
+
+;-----------------------------------------------------------
+;*** specific settings
+;-----------------------------------------------------------
+Set $InstallerType$   	= "???"
+Set $MinimumSpace$    	= "5000 MB"
+
+Set $VersionFile$		= "%ScriptPath%\" + $pr_InstallSrc$ + "\version.txt"
+if not (FileExists($VersionFile$))
+	LogError "Version file not found!"
+	isFatalError
+endif
+Set $VersionDat$		= loadTextFile($VersionFile$)
+Set $Inst_Sub$			= takeString("0", $VersionDat$)
+if ($Inst_Sub$	= "")
+	logWarning "No version string found; using $Version$ instead"
+	Set $Inst_Sub$ = $Version$
+endif 
+
+Set $Installer$		  	= "%ScriptPath%\" + $pr_InstallSrc$ + "\bin\win64\setup.exe"
+;; does not work:
+;Set $Installer$		  	= "%ScriptPath%\" + $pr_InstallSrc$ + "\setup.exe"
+
+Set $InstallDir$      	= $InstallBase$ + "\" + $StrippedProductId$ + "\" + $Inst_Sub$ + "\"
+Set $InstallCfg$		= "%opsiTmpDir%\" + $StrippedProductId$ + "_install.cfg"
+Set $InstallLog$		= "%opsiTmpDir%\" + $StrippedProductId$ + "_install.log"
+Set $UninstallCfg$		= "%opsiTmpDir%\" + $StrippedProductId$ + "_uninstall.cfg"
+Set $UninstallLog$		= "%opsiTmpDir%\" + $StrippedProductId$ + "_uninstall.log"
+
+Set $License$			= "%ScriptPath%\" + $pr_LicFile$
+
+Set $MainBin$        	= $StrippedProductId$ + "\\" + $Inst_Sub$ + "\\" + "MATLAB.exe"
+;*** use wildcard search:
+Set $EXE$				= CreateStringList($StrippedProductId$ + "\\" + $Inst_Sub$ + "\\" + "%")
+
+Set $Uninst_ID$ 	   	= "Matlab " + $Inst_Sub$
+Set $Uninst_Prg$       	= "uninstall.exe"
+Set $Uninstaller$	   	= $InstallDir$ + "uninstall\bin\win64\" + $Uninst_Prg$
+; ...oder UninstallString aus Registry
+
+Set $Inst_Opts$        	= "-inputFile " + $InstallCfg$
+Set $Uninst_Opts$      	= "-inputFile " + $UninstallCfg$

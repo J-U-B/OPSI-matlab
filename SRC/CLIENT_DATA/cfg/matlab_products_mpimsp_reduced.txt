@@ -1,0 +1,16 @@
+########################################
+# Components
+########################################
+product.MATLAB
+product.Curve_Fitting_Toolbox
+product.Image_Processing_Toolbox
+product.Neural_Network_Toolbox
+product.Optimization_Toolbox
+product.Partial_Differential_Equation_Toolbox
+product.Signal_Processing_Toolbox
+product.Simulink
+product.Statistics_and_Machine_Learning_Toolbox
+product.Symbolic_Math_Toolbox
+
+########################################
+

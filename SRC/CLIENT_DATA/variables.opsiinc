@@ -1,0 +1,92 @@
+;=====================================================================
+; variables.opsiinc
+; This file contains all possible variables, excluding the opsi-system
+; variables, for the opsi-winst scripts in use.
+;
+; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-24 07:44:43 +0100
+;=====================================================================
+
+DefStringList $MAP$
+DefStringList $EXE$
+DefStringList $ProductMap$
+DefStringList $pr_ProdList$
+DefStringList $aString$
+DefStringList $VersionDat$
+
+DefVar $ActionRequest$
+DefVar $CheckBin$
+DefVar $currentLogLevel$
+DefVar $CustomPostInstall$
+DefVar $CustomPostUninstall$
+DefVar $ExitCode$
+DefVar $FullProductId$
+DefVar $Img_Install$
+DefVar $Img_Install_Custom$
+DefVar $Img_Uninstall$
+DefVar $Img_Uninstall_Custom$
+DefVar $Img_Prepare$
+DefVar $Img_Plugins$
+DefVar $Img_Update$	
+DefVar $InstallBase$
+DefVar $InstallCfg$
+DefVar $InstallDir$
+DefVar $InstallLog$
+DefVar $Installer$
+DefVar $InstallerType$
+DefVar $Inst_Loc$
+DefVar $Inst_Opts$
+DefVar $Inst_Sub$
+DefVar $Inst_Ver$
+DefVar $Inst_Name$
+DefVar $isDFN$
+DefVar $License$
+DefVar $LogLvl$
+DefVar $LogLevelDefault$
+DefVar $MainBin$
+DefVar $MinimumSpace$
+DefVar $NTVersion$
+DefVar $ProductId$
+DefVar $ProductName$
+DefVar $RegKeyPath$
+DefVar $StrippedProductId$
+DefVar $sw_lang$
+DefVar $sw_arch$
+DefVar $Str$
+DefVar $SystemType$
+DefVar $Testing$
+DefVar $TimeDiff$
+DefVar $Uninstaller$
+DefVar $UninstallerReg$
+DefVar $UninstallCfg$
+DefVar $UninstallLog$
+DefVar $UninstallString$
+DefVar $Uninst_ID$
+DefVar $Uninst_Opts$
+DefVar $Uninst_Prg$
+DefVar $Uninst_RegDir$
+DefVar $Version$
+DefVar $VersionFile$
+
+; Properties:
+;DefVar $pr_comp_X$
+DefVar $pr_SetupMode$
+DefVar $pr_AutomatedModeTimeout$
+DefVar $pr_InstallSrc$ 
+DefVar $pr_InstallKey$ 
+DefVar $pr_LicFile$
+DefVar $pr_ProdListFile$
+DefVar $pr_FileAssoc$ 	
+DefVar $pr_AccelTask$ 	
+DefVar $pr_EnableLNU$ 
+DefVar $pr_DesktopLink$
+DefVar $pr_StartMenuLink$	
+DefVar $pr_PreUninst$
+DefVar $pr_PurgeDirectory$
+DefVar $pr_RemovePrefs$
+
+; Variables for checkinstance:
+DefVar $Proc_Cnt$
+DefVar $Proc_Killed$
+DefVar $PSDETAIL$
+DefVar $psdetail_mod$
+DefVar $Kill_Running$
