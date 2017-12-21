@@ -83,8 +83,6 @@ name: install_key
 multivalue: False
 editable: True
 description: Installation Key or relative path to a file containing the key
-values: [""]
-default: [""]
 {{#ifdef_internal}}
 values: ["", "custom\\fileInstallationKey.txt"]
 default: ["custom\\fileInstallationKey.txt"]
@@ -151,8 +149,8 @@ name: product_list_file
 multivalue: False
 editable: True
 description: Products to install or remove
-values: ["", "cfg\\matlab_products_minimal.txt", "cfg\\matlab_products_full.txt", "cfg\\matlab_products_mpimsp.txt", "cfg\\matlab_products_mpimsp_reduced.txt"]
-default: [""]
+values: ["cfg\\matlab_products_minimal.txt", "cfg\\matlab_products_full.txt", "cfg\\matlab_products_mpimsp.txt", "cfg\\matlab_products_mpimsp_reduced.txt"]
+default: []
 
 [ProductProperty]
 type: unicode
@@ -163,7 +161,7 @@ description: Products to install or remove, supplements product_list_file
 ;; Generate list:
 ;; cat matlab_products_full.txt  | grep ^product | sort | sed -e 's/^product\.\(.*\)$/, "\1"/' | sed ':a;N;$!ba;s/\n/ /g'
 values: ["" , "Aerospace_Blockset" , "Aerospace_Toolbox" , "Antenna_Toolbox" , "Audio_System_Toolbox" , "Automated_Driving_System_Toolbox" , "Bioinformatics_Toolbox" , "Communications_System_Toolbox" , "Computer_Vision_System_Toolbox" , "Control_System_Toolbox" , "Curve_Fitting_Toolbox" , "Data_Acquisition_Toolbox" , "Database_Toolbox" , "Datafeed_Toolbox" , "DO_Qualification_Kit" , "DSP_System_Toolbox" , "Econometrics_Toolbox" , "Embedded_Coder" , "Filter_Design_HDL_Coder" , "Financial_Instruments_Toolbox" , "Financial_Toolbox" , "Fixed_Point_Designer" , "Fuzzy_Logic_Toolbox" , "Global_Optimization_Toolbox" , "GPU_Coder" , "HDL_Coder" , "HDL_Verifier" , "IEC_Certification_Kit" , "Image_Acquisition_Toolbox" , "Image_Processing_Toolbox" , "Instrument_Control_Toolbox" , "LTE_HDL_Toolbox" , "LTE_System_Toolbox" , "Mapping_Toolbox" , "MATLAB" , "MATLAB_Coder" , "MATLAB_Compiler" , "MATLAB_Compiler_SDK" , "MATLAB_Distributed_Computing_Server" , "MATLAB_Production_Server" , "MATLAB_Report_Generator" , "Model_Based_Calibration_Toolbox" , "Model_Predictive_Control_Toolbox" , "Neural_Network_Toolbox" , "OPC_Toolbox" , "Optimization_Toolbox" , "Parallel_Computing_Toolbox" , "Partial_Differential_Equation_Toolbox" , "Phased_Array_System_Toolbox" , "Polyspace_Bug_Finder" , "Polyspace_Code_Prover" , "Powertrain_Blockset" , "RF_Blockset" , "RF_Toolbox" , "Risk_Management_Toolbox" , "Robotics_System_Toolbox" , "Robust_Control_Toolbox" , "Signal_Processing_Toolbox" , "SimBiology" , "SimEvents" , "Simscape" , "Simscape_Driveline" , "Simscape_Electronics" , "Simscape_Fluids" , "Simscape_Multibody" , "Simscape_Power_Systems" , "Simulink" , "Simulink_3D_Animation" , "Simulink_Check" , "Simulink_Code_Inspector" , "Simulink_Coder" , "Simulink_Control_Design" , "Simulink_Coverage" , "Simulink_Design_Optimization" , "Simulink_Design_Verifier" , "Simulink_Desktop_Real_Time" , "Simulink_PLC_Coder" , "Simulink_Real_Time" , "Simulink_Report_Generator" , "Simulink_Requirements" , "Simulink_Test" , "Spreadsheet_Link" , "Stateflow" , "Statistics_and_Machine_Learning_Toolbox" , "Symbolic_Math_Toolbox" , "System_Identification_Toolbox" , "Text_Analytics_Toolbox" , "Trading_Toolbox" , "Vehicle_Network_Toolbox" , "Vision_HDL_Toolbox" , "Wavelet_Toolbox" , "WLAN_System_Toolbox"]
-default: [""]
+default: []
 
 [ProductProperty]
 type: bool
@@ -174,8 +172,8 @@ default: True
 [ProductProperty]
 type: bool
 name: purge_directory
-description: forced purge of installation directory on uninstall
-default: False
+description: forced purge of installation directory on uninstall resp. before install
+default: True
 
 
 [ProductProperty]
@@ -221,7 +219,19 @@ default: ["default"]
 
 
 [Changelog]
+{{ORGPREFIX}}matlab 2017.2-2 {{STAGE}}:
+	* on purge_directory: delete target directory before installation
+	* changed default for purge_directory to true
+	* fix_rights in Makefile
+	* control.in: fix for install_key property
+	* reduce logLevel when purging directory
+	* fix default fot properties product_list and product_list_file
+	
+	-- J. Boettge <boettge@mpi-halle.mpg.de>  2017-12-21 14:06:40 +0100
+
+
 {{ORGPREFIX}}matlab 2017.2-1 {{STAGE}}:
 	* initial package for R2017b
+	
 	-- J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-23 16:12:03 +0100
 	

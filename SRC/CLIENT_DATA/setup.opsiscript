@@ -2,7 +2,7 @@
 ; setup.ins MATLAB
 ; Installer-Typ: ???
 ; 
-; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-23 15:22:35 +0100
+; J. Boettge <boettge@mpi-halle.mpg.de>  2017-12-21 14:12:58 +0100
 ;======================================================================
 
 ;======================================================================
@@ -47,8 +47,19 @@ else
 		if FileExists("%ScriptPath%\checkinstance.opsiinc")
 			include_append "%ScriptPath%\checkinstance.opsiinc"
 			sub_checkinstance
+		endif	
+	endif
+	
+	if (FileExists($InstallDir$))
+		logWarning "Target directory already/still exists: " + $InstallDir$
+		if ($pr_PurgeDirectory$ = "True")
+			;=== try cleanup
+			setlogLevel = 5
+			Files_del_TargetDir
+			setlogLevel = $LogLevelDefault$
 		endif
 	endif
+
 	
 	; Start the installation
 	ShowBitmap $Img_Install$ $ProductName$
@@ -80,7 +91,9 @@ else
 	
 	comment "Start setup program"
 	Message "Installing - please be patient..."
+	setlogLevel = 5
 	Winbatch_install
+	setlogLevel = $LogLevelDefault$
 	Sub_check_exitcode
 	
 	if not (FileExists($InstallDir$))
@@ -201,4 +214,7 @@ copy "$InstallCfgSrc$"  "$InstallCfg$"
 ;=====================================================================
 del -f "$InstallCfg$"  
   
-
+;======================================================================
+[Files_del_TargetDir]
+;======================================================================
+delete -sf "$InstallDir$"

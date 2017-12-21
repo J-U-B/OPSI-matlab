@@ -1,11 +1,11 @@
 ############################################################
 # OPSI package Makefile (MATLAB)
-# Version: 1.6
+# Version: 1.7
 # Jens Boettge <boettge@mpi-halle.mpg.de>
-# 2017-11-17 12:58:57 +0100
+# 2017-12-21 12:42:39 +0100
 ############################################################
 
-.PHONY: header clean mpimsp dfn mpimsp_test dfn_test all_test all_prod all help
+.PHONY: header clean fix_rights mpimsp dfn mpimsp_test dfn_test all_test all_prod all help
 #.DEFAULT_GOAL := mpimsp_test
 .DEFAULT_GOAL := help
 
@@ -113,6 +113,14 @@ clean: header
 	@echo "---------- cleaning  build directory -----------------------------"
 	@rm -rf $(BUILD_DIR)	
 	
+fix_rights: header
+	@echo "---------- setting rights for PACKAGES folder --------------------"
+	chgrp -R opsiadmin $(PACKAGE_DIR)
+	chmod g+rx $(PACKAGE_DIR)
+	chmod g+r $(PACKAGE_DIR)/*
+	
+	
+	
 help: header
 	@echo "Valid targets: "
 	@echo "	mpimsp"
@@ -123,8 +131,9 @@ help: header
 	@echo "	dfn_test_noprefix"
 	@echo "	all_prod"
 	@echo "	all_test"
-	@echo "	clean"
-	@echo "	clean_packages"
+	@echo "	clean              - cleanup $(BUILD_DIR)"
+	@echo "	clean_packages     - cleanup $(PACKAGE_DIR)"
+	@echo "	fix_rights         - setting rights for $(PACKAGE_DIR)"
 	@echo ""
 	@echo "Options:"
 	@echo "	ARCHIVE_FORMAT=[cpio|tar]       (default: cpio)"

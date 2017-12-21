@@ -1,7 +1,7 @@
 ;=====================================================================
 ; delsub.opsiinc MATLAB
 ;
-; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-24 07:48:04 +0100
+; J. Boettge <boettge@mpi-halle.mpg.de>  2017-12-21 14:12:50 +0100
 ;=====================================================================
 
 
@@ -132,7 +132,9 @@ if not (FileExists($UninstallCfg$))
 endif	
 
 ;=== UNINSTALL
+setlogLevel = 5
 Winbatch_Uninstall /TimeOutSeconds 1000
+setlogLevel = $LogLevelDefault$
 sub_check_exitcode
 
 ;=== check install directory
@@ -142,7 +144,9 @@ if ($ExitCode$ = "0") and not ($Uninst_RegDir$ = "")
 			logWarning "Install directory still exists: [" + $Uninst_RegDir$ + "]"
 			if ($pr_PurgeDirectory$ = "True")
 				;=== try final cleanup
+				setlogLevel = 5
 				Files_del_InstallDir
+				setlogLevel = $LogLevelDefault$
 			endif
 		endif
 endif	
