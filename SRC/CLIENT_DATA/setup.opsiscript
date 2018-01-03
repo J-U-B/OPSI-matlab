@@ -2,7 +2,7 @@
 ; setup.ins MATLAB
 ; Installer-Typ: ???
 ; 
-; J. Boettge <boettge@mpi-halle.mpg.de>  2017-12-21 14:12:58 +0100
+; J. Boettge <boettge@mpi-halle.mpg.de>  2018-01-03 11:51:24 +0100
 ;======================================================================
 
 ;======================================================================
@@ -65,7 +65,26 @@ else
 	ShowBitmap $Img_Install$ $ProductName$
 	Message "Installing " + $ProductName$ + " " + $Version$+ " (" + $sw_arch$ + " bit)"
 	
-	marktime	
+	marktime
+	
+	;=== retrieve InstallKey
+	if FileExists("%ScriptPath%\" + $pr_InstallKey$)
+		comment "trying the value given for [install_key] as a relative path to a file containing the key"
+		set $aString$ = loadTextFile("%ScriptPath%\" + $pr_InstallKey$)
+		if (count($aString$) INT= "0")
+			logError "[%ScriptPath%\" + $pr_InstallKey$ + "] is empty or not readable"
+			isFatalError
+		endif
+		if (count($aString$) INT> "1")
+			logWarning "[%ScriptPath%\" + $pr_InstallKey$ + "] contains more than one line"
+		endif		
+		set $Inst_Key$ =takestring("0",$aString$)
+		if (strLength($Inst_Key$) INT< "120")
+			logWarning "given fileInstallationKey seems to be too short; trying anyway"
+		endif
+	else
+		set $Inst_Key$ = $pr_InstallKey$
+	endif	
 	
 	;=== create install config
 	comment "Creating configuration file for setup"
@@ -176,7 +195,7 @@ SetValueByKey "mode" 					"$pr_SetupMode$"
 SetValueByKey "automatedModeTimeout"	"$pr_AutomatedModeTimeout$"
 ;*** install settings
 SetValueByKey "destinationFolder" 		"$InstallDir$"
-SetValueByKey "fileInstallationKey"		"$pr_InstallKey$"
+SetValueByKey "fileInstallationKey"		"$Inst_Key$"
 SetValueByKey "licensePath" 			"$License$"
 SetValueByKey "outputFile" 				"$InstallLog$"
 ;*** configuration

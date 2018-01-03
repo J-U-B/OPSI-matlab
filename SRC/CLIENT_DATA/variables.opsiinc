@@ -3,7 +3,7 @@
 ; This file contains all possible variables, excluding the opsi-system
 ; variables, for the opsi-winst scripts in use.
 ;
-; J. Boettge <boettge@mpi-halle.mpg.de>  2017-11-24 07:44:43 +0100
+; J. Boettge <boettge@mpi-halle.mpg.de>  2018-01-03 11:06:47 +0100
 ;=====================================================================
 
 DefStringList $MAP$
@@ -33,6 +33,7 @@ DefVar $InstallDir$
 DefVar $InstallLog$
 DefVar $Installer$
 DefVar $InstallerType$
+DefVar $Inst_Key$
 DefVar $Inst_Loc$
 DefVar $Inst_Opts$
 DefVar $Inst_Sub$

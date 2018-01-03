@@ -88,7 +88,8 @@ rm -rf $TMP_DIR
 # no automatic download for Matlab available.
 #=====================================================================
 
-VERSION=`opsi-admin -dS method getProduct_hash ${PRODUCT_ID} | grep productVersion | cut -d "=" -f 2`
+#VERSION=`opsi-admin -dS method getProduct_hash ${PRODUCT_ID} | grep productVersion | cut -d "=" -f 2`
+VERSION=${PRODUCT_VERSION}
 BASE="https://de.mathworks.com/"
 PROD="matlab"
 
