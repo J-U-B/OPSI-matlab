@@ -219,6 +219,12 @@ default: ["default"]
 
 
 [Changelog]
+matlab 2017.2-4:
+	* fix OS detection for Windows 10
+	
+	-- J. Boettge <boettge@mpi-halle.mpg.de>  2018-02-27 13:03:28 +0100
+
+
 {{ORGPREFIX}}matlab 2017.2-3 {{STAGE}}:
 	* fixing handling of install_key (fileInstallationKey)
 	
